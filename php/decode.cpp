@@ -53,14 +53,15 @@ void decode_integer1(size_t& dwDecodePos, const char* pData, const size_t dwData
     check(dwDecodePos+1, dwDataSize);
     ZVAL_LONG(zvalue,(unsigned char)*(unsigned char*)(pData+dwDecodePos));
     ++dwDecodePos;
-
 }
+
 void decode_integer2(size_t& dwDecodePos, const char* pData, const size_t dwDataSize, zval *zvalue)
 {
     check(dwDecodePos+2, dwDataSize);
     ZVAL_LONG(zvalue,ntohs(*(unsigned short*)(pData+dwDecodePos)));
     dwDecodePos += 2;
 }
+
 void decode_integer4(size_t& dwDecodePos, const char* pData, const size_t dwDataSize, zval *zvalue)
 {
     check(dwDecodePos+4, dwDataSize);
@@ -73,14 +74,11 @@ void decode_integer8(size_t& dwDecodePos, const char* pData, const size_t dwData
     ZVAL_LONG(zvalue,ntohll(*(uint64_t*)(pData+dwDecodePos)));
     dwDecodePos += 8;
 }
-
-
 void decode_sinteger1(size_t& dwDecodePos, const char* pData, const size_t dwDataSize, zval *zvalue)
 {
     check(dwDecodePos+1, dwDataSize);
     ZVAL_LONG(zvalue,*(char*)(pData+dwDecodePos));
     ++dwDecodePos;
-
 }
 void decode_sinteger2(size_t& dwDecodePos, const char* pData, const size_t dwDataSize, zval *zvalue)
 {
@@ -157,13 +155,13 @@ void decode_map(size_t& dwDecodePos, const char* pData, const size_t dwDataSize,
         ++dwDecodePos;
         check(dwDecodePos+ucNameLen, dwDataSize);
 
-        std::string sKey(pData+dwDecodePos, ucNameLen);
-        //sKey.assign();
+        char szKey[256] = {0};
+        memcpy(szKey,pData+dwDecodePos,ucNameLen);
 
         zval *value;
         MAKE_STD_ZVAL(value);
 
-        add_assoc_zval(zvalue,sKey.c_str(),value);
+        add_assoc_zval(zvalue,szKey,value);
 
         dwDecodePos += ucNameLen;
         if ( dwDataSize > dwDecodePos )
