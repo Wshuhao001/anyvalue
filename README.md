@@ -69,6 +69,8 @@ java
         oValue.put("");
         String sBuf = oValue.encodeJSON();
         System.out.println(sBuf);
-        HeapBuffer sBuf2 = oValue.encode();
+        byte[] sBuf2 = oValue.encode();
         CAnyValue oValue2 = new CAnyValue();
-        oValue2.decode(sBuf2.position(0));
+        oValue2.decode(sBuf2);
+        String sBuf1 = oValue2.encodeJSON();
+        System.out.println(sBuf1);
