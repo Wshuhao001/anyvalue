@@ -1,7 +1,7 @@
 anyvalue
 ========
 
-高性能数据序列化库，支持C++ java python php objectc 语言，兼容json数据格试，可以互相转换
+高性能数据序列化库，可序列化为二进制，也可序列化为json，支持C++ java python php objectc 语言，兼容json数据格试，可以互相转换
 
 php
 ========
@@ -16,6 +16,7 @@ php
 
     $str = av_encode($obj);
     var_dump(av_decode($str));
+    encode 比igbinnary快2倍，decode性能相当
 
 python
 ========
