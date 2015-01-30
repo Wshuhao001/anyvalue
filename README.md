@@ -47,3 +47,27 @@ c++
         oValue2.decode(sBuf.data(),sBuf.size());
         uint32_t dwValue = oValue2["abc"].asUInt();
 
+java
+=========
+        CAnyValue oValue = new CAnyValue();
+        oValue.put("ABC");
+        oValue.put(-100000000);
+        oValue.put(-1);
+        oValue.put(true);
+        oValue.put(false);
+        oValue.put(1.55555555);
+        oValue.put(null);
+        oValue.put(new CAnyValue());
+        CAnyValue oValue1 = new CAnyValue();
+        oValue1.put("name", "starjiang");
+        oValue1.put("desc", "我爱北京天安门\n");
+        oValue1.put("age", 30);
+        oValue1.put("age2", 0);
+        oValue.put(oValue1);
+        oValue.put("starjiang\n");
+        oValue.put("");
+        String sBuf = oValue.encodeJSON();
+        System.out.println(sBuf);
+        HeapBuffer sBuf2 = oValue.encode();
+        CAnyValue oValue2 = new CAnyValue();
+        oValue2.decode(sBuf2.position(0));
