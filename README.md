@@ -1,7 +1,7 @@
 anyvalue
 ========
 
-高性能数据序列化库，可序列化为二进制，也可序列化为json，支持C++ java python php objectc 语言，兼容json数据格试，可以互相转换
+高性能数据序列化库，可序列化为二进制，也可序列化为json，支持C++ java python php objectc 语言，兼容json数据格试，可以互相转换,可用于数据存储序列化，网序传输，远程调用，跨语言通信
 
 php
 ========
