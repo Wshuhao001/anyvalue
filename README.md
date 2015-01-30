@@ -5,7 +5,12 @@ anyvalue
 
 php
 ========
-
+###  安装
+    修改Makefile,  
+    PHP_EXT_HOME=php 扩展目录，供安装用
+    PHP_SRC= php头文件目录
+    执行sudo make & make install
+###  使用    
     $obj['abc']='dasdasdsa';
     $obj['bcd']=10000;
     $obj['name']="sssssss";
@@ -28,6 +33,7 @@ python
 
 c++
 =========
+c++只有一个头文件包含CAnyValue.h这个头文件即可
         CAnyValue oValue;
         oValue["abc"]=1;
         oValue["bcd"]="中国人helloaaa{}]\"'/\\*&^%$#@!><;:''''...,,中国人民大ddd";
