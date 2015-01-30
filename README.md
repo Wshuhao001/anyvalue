@@ -26,14 +26,14 @@ php
 python
 ========
         import anyvalue
-
         obj=[1,2,3,4,-111,-1,-11111,1.5555,-1.11111,"dsadsdsdsads","dsdsadsadsds",{"a":1}]
         str = anyvalue.encode(obj)
         obj = anyvalue.decode(str)
 
 c++
 =========
-c++只有一个头文件包含CAnyValue.h这个头文件即可
+### 使用
+        c++只有一个头文件包含CAnyValue.h这个头文件即可
         CAnyValue oValue;
         oValue["abc"]=1;
         oValue["bcd"]="中国人helloaaa{}]\"'/\\*&^%$#@!><;:''''...,,中国人民大ddd";
