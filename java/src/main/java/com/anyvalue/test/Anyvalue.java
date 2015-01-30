@@ -9,10 +9,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-
 import com.anyvalue.CAnyValue;
-import com.anyvalue.HeapBuffer;
+
 
 /**
  *
@@ -48,10 +46,9 @@ public class Anyvalue {
 		oValue.put("");
 		String sBuf = oValue.encodeJSON();
 		System.out.println(sBuf);
-		HeapBuffer sBuf2 = oValue.encode();
+		byte [] data = oValue.encode();
 		CAnyValue oValue2 = new CAnyValue();
-		
-		oValue2.decode(sBuf2.position(0));
+		oValue2.decode(data);
 		String sBuf3 = oValue2.encodeJSON();
 		
 		System.out.println("sbuf3="+sBuf3);

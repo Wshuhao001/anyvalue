@@ -17,12 +17,27 @@ for($i=0;$i<100000;$i++)
 	$obj = av_decode($str1);
 }
 
+echo microtime(true)."\n";
+
+for($i=0;$i<100000;$i++)
+{
+	$obj = igbinary_unserialize($str3);
+}
+
+
 
 echo microtime(true)."\n";
 
 for($i=0;$i<100000;$i++)
 {
 	$str = av_encode($obj);
+}
+
+echo microtime(true)."\n";
+
+for($i=0;$i<100000;$i++)
+{
+	$str = igbinary_serialize($obj);
 }
 
 echo microtime(true)."\n";
