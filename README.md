@@ -6,16 +6,16 @@ anyvalue
 php
 ========
 
-$obj['abc']='dasdasdsa';
-$obj['bcd']=10000;
-$obj['name']="sssssss";
-$obj['urls']=array('http://www.baidu.com','http://www.qq.com');
-$obj['info']['age']=19;
-$obj['info']['name']='helloworld';
-$obj['info']['price']=1.5555;
+    $obj['abc']='dasdasdsa';
+    $obj['bcd']=10000;
+    $obj['name']="sssssss";
+    $obj['urls']=array('http://www.baidu.com','http://www.qq.com');
+    $obj['info']['age']=19;
+    $obj['info']['name']='helloworld';
+    $obj['info']['price']=1.5555;
 
-$str = av_encode($obj);
-var_dump(av_decode($str));
+    $str = av_encode($obj);
+    var_dump(av_decode($str));
 
 python
 ========
