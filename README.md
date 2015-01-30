@@ -16,7 +16,7 @@ php
 
     $str = av_encode($obj);
     var_dump(av_decode($str));
-    encode 比igbinnary快2倍，decode性能相当
+    encode 比igbinary快2倍，decode性能相当
 
 python
 ========
