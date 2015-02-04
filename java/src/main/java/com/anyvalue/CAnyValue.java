@@ -98,6 +98,10 @@ public class CAnyValue {
 			}
 			data = o;
 		}
+		else if( o instanceof List || o instanceof Map)
+		{
+			throw new Error("unsupport data type");
+		}
 		else 
 		{
 			putObject(o);
@@ -1226,7 +1230,6 @@ public class CAnyValue {
 
 			for(int i=0;i<fields.length;i++)
 			{
-				System.out.println(fields[i].getType().getName());
 				if(source.containsKey(fields[i].getName()))
 				{
 					if(fields[i].getType().getName() == "byte")
