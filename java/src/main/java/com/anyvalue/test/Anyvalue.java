@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import com.anyvalue.CAnyValue;
 
-
 /**
  *
  * @author starjiang
@@ -21,8 +20,9 @@ public class Anyvalue {
 	/**
 	 * @param args the command line arguments
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception{
 		// TODO code application logic here
+		
 		CAnyValue oValue = new CAnyValue();
 		oValue.put("ABC");
 		oValue.put(-100000000);
@@ -43,14 +43,16 @@ public class Anyvalue {
 		oValue1.put("age2", 0);
 		oValue.put(oValue1);
 		oValue.put("starjiang\n");
-		oValue.put("");
+		oValue.put("111111111111111111111111111111111111111111111111111111111111111111111111111111");
+		
+		byte [] data = oValue.encode();
 		String sBuf = oValue.encodeJSON();
 		System.out.println(sBuf);
-		byte [] data = oValue.encode();
+		
 		CAnyValue oValue2 = new CAnyValue();
 		oValue2.decode(data);
 		String sBuf3 = oValue2.encodeJSON();
-		
+
 		System.out.println("sbuf3="+sBuf3);
 		String sBuf5 =oValue1.encodeJSON();
 		System.out.println(sBuf5);
@@ -64,12 +66,20 @@ public class Anyvalue {
 		String s1 = "    {\"name\"  :\"starjiang\"  ,\"age\":-129111111,\"score\":1.5,\"info\":{\"nick\":\"\\u6211\\u662f\\u4e00\\u4e2a\\u5175\\u6765\\u81ea\\u8001\\u767e\\u59d3\",\"age\":12},\"items\":[123,\"addasdsa\"]}";
 		oValue3.decodeJSON(s1);
 		System.out.println(oValue3.get("age").asLong());
+		oValue3.get("info").put("score",1.555);
+		oValue3.get("info").put("rank",1.505);
+		oValue3.get("info").put("year",2001);
+		oValue3.get("info").put("month",11);
+		User user = (User)oValue3.get("info").asObject(User.class);
 		
+		System.out.println(user.toString());
+		
+		oValue3.put("info1",user);
 		String sBuf6 = oValue3.encodeJSON();
 		System.out.println(sBuf6);
 		
 		System.out.println(oValue2.get(8).get("desc").asString());
-		
+
 		/*
 		File file = new File("d:\\a.txt");
 		

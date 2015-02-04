@@ -1,4 +1,6 @@
 package com.anyvalue;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -51,33 +53,35 @@ public class CAnyValue {
 		if (o instanceof Boolean) {
 			type = DType.Bool;
 			subtype = DType.Bool;
+			data = o;
 		} else if (o instanceof Byte) {
 			subtype = (Byte) o < 0 ? DType.SInteger1 : DType.Integer1;
 			type = (Byte) o < 0 ? DType.SInteger : DType.Integer;
+			data = o;
 		} else if (o instanceof Short) {
 			subtype = (Short) o < 0 ? DType.SInteger2 : DType.Integer2;
 			type = (Short) o < 0 ? DType.SInteger : DType.Integer;
+			data = o;
 		} else if (o instanceof Integer) {
 			subtype = (Integer) o < 0 ? DType.SInteger4 : DType.Integer4;
 			type = (Integer) o < 0 ? DType.SInteger : DType.Integer;
+			data = o;
 		} else if (o instanceof Long) {
 			subtype = (Long) o < 0 ? DType.SInteger8 : DType.Integer8;
 			type = (Long) o < 0 ? DType.SInteger : DType.Integer;
+			data = o;
 		} else if (o instanceof Double) {
 			type = DType.Float;
 			subtype = DType.Float;
+			data = o;
 		} else if (o instanceof Float) {
 			type = DType.Float;
+			data = o;
 			subtype = DType.Float;
-		} else if (o instanceof List) {
-			type = DType.Vector;
-			subtype = DType.Vector;
-		} else if (o instanceof Map) {
-			type = DType.Map;
-			subtype = DType.Map;
 		} else if (o == null) {
 			type = DType.Null;
 			subtype = DType.Null;
+			data = o;
 		} else if (o instanceof String) {
 			String str = (String) o;
 			if (str.length() < 0xFF) {
@@ -92,11 +96,36 @@ public class CAnyValue {
 				type = DType.String;
 
 			}
+			data = o;
 		}
-		else {
-			throw new Error("not support type");
+		else 
+		{
+			putObject(o);
 		}
-		data = o;
+	}
+	
+	private void putObject(Object obj)
+	{
+		try
+		{
+			initAsMap();
+			Field []fields = obj.getClass().getDeclaredFields();
+			
+			for(int i=0;i<fields.length;i++)
+			{
+				fields[i].setAccessible(true);
+				String fieldType = fields[i].getType().getName();
+				if(fieldType == "long" ||fieldType == "int" ||fieldType == "short" || fieldType == "java.lang.String" ||
+						fieldType == "byte" ||fieldType =="float" ||fieldType=="double")
+				{
+					((Map<String, CAnyValue>) data).put(fields[i].getName(), new CAnyValue(fields[i].get(obj)));
+				}
+			}
+		}
+		catch(Exception e)
+		{
+			throw new Error(e.getMessage());
+		}
 	}
 
 	public void initAsMap() {
@@ -1145,12 +1174,104 @@ public class CAnyValue {
 		}
 		return "";
 	}
+	
+	public float asFloat() {
+		if (type == DType.Float && data != null) {
+			
+			if(data instanceof Float)
+			{
+				return (Float)data;
+			}
+			else
+			{
+				return Float.valueOf(data.toString());
+			}
+		}
+		return 0;
+	}
+	
+	public double asDouble() {
+		if (type == DType.Float && data != null) {
+			if(data instanceof Double)
+			{
+				return (Double)data;
+			}
+			else
+			{
+				return Double.valueOf(data.toString());
+			}
+		}
+		return 0.0;
+	}
 
 	public boolean asBool() {
 		if (type == DType.Bool && data != null) {
 			return (Boolean) data;
 		}
 		return false;
+	}
+	
+	public Object asObject(Class<?> clazz)
+	{
+		try
+		{
+			Object obj = clazz.newInstance();
+			Field []fields = clazz.getDeclaredFields();
+			
+			if (type != DType.Map) {
+				return obj;
+			}
+	
+			Map<String, CAnyValue> source = ((Map<String, CAnyValue>) data);
+
+			for(int i=0;i<fields.length;i++)
+			{
+				System.out.println(fields[i].getType().getName());
+				if(source.containsKey(fields[i].getName()))
+				{
+					if(fields[i].getType().getName() == "byte")
+					{
+						fields[i].setAccessible(true);
+						fields[i].set(obj, source.get(fields[i].getName()).asByte());
+					}
+					if(fields[i].getType().getName() == "long")
+					{
+						fields[i].setAccessible(true);
+						fields[i].set(obj, source.get(fields[i].getName()).asLong());
+					}
+					else if(fields[i].getType().getName() == "int")
+					{
+						fields[i].setAccessible(true);
+						fields[i].set(obj, source.get(fields[i].getName()).asInt());
+					}
+					else if(fields[i].getType().getName() == "short")
+					{
+						fields[i].setAccessible(true);
+						fields[i].set(obj, source.get(fields[i].getName()).asShort());
+					}
+					else if(fields[i].getType().getName() == "float")
+					{
+						fields[i].setAccessible(true);
+						fields[i].set(obj, source.get(fields[i].getName()).asFloat());
+					}
+					else if(fields[i].getType().getName() == "double")
+					{
+						fields[i].setAccessible(true);
+						fields[i].set(obj, source.get(fields[i].getName()).asDouble());
+					}
+					else if(fields[i].getType().getName() == "java.lang.String")
+					{
+						fields[i].setAccessible(true);
+						fields[i].set(obj, source.get(fields[i].getName()).asString());
+					}
+				}
+			}
+			return obj;
+		}
+		catch(Exception e)
+		{
+			throw new Error(e.getMessage());
+		}
 	}
 
 	public void clear() {
