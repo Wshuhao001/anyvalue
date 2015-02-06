@@ -1,10 +1,8 @@
 package com.anyvalue;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.*;
-
-@SuppressWarnings({"unchecked"})
+import java.util.PrimitiveIterator.OfDouble;
 
 class DType {
 	
@@ -36,6 +34,7 @@ class CRef
 	public int size;
 }
 
+@SuppressWarnings({"unchecked"})
 public class CAnyValue {
 
 	private Object data;
@@ -149,7 +148,7 @@ public class CAnyValue {
 
 	}
 
-	private void decode(HeapBuffer bytedata) {
+	private void decode(ByteBuffer bytedata) {
 
 		int valuetype = bytedata.get();
 		switch (valuetype) {
@@ -210,17 +209,17 @@ public class CAnyValue {
 
 	public void decode(byte [] data)
 	{
-		HeapBuffer bytedata = HeapBuffer.wrap(data);
+		ByteBuffer bytedata = ByteBuffer.wrap(data);
 		decode(bytedata);
 	}
 	
 	public void decode(byte [] data,int offset,int length)
 	{
-		HeapBuffer bytedata = HeapBuffer.wrap(data, offset, length);
+		ByteBuffer bytedata = ByteBuffer.wrap(data, offset, length);
 		decode(bytedata);
 	}
 		
-	private void decode_bool(HeapBuffer bytedata) {
+	private void decode_bool(ByteBuffer bytedata) {
 
 		byte v =  bytedata.get();
 		type = DType.Bool;
@@ -232,21 +231,21 @@ public class CAnyValue {
 		}
 	}
 
-	private void decode_float(HeapBuffer bytedata) {
+	private void decode_float(ByteBuffer bytedata) {
 
 		type = DType.Float;
 		subtype = DType.Float;
 		data = (Double) bytedata.getDouble();
 	}
 
-	private void decode_integer1(HeapBuffer bytedata) {
+	private void decode_integer1(ByteBuffer bytedata) {
 
 		type = DType.Integer;
 		subtype = DType.Integer1;
 		data = (Byte) bytedata.get();
 	}
 
-	private void decode_integer2(HeapBuffer bytedata) {
+	private void decode_integer2(ByteBuffer bytedata) {
 
 		type = DType.Integer;
 		subtype = DType.Integer2;
@@ -254,14 +253,14 @@ public class CAnyValue {
 
 	}
 
-	private void decode_integer4(HeapBuffer bytedata) {
+	private void decode_integer4(ByteBuffer bytedata) {
 
 		type = DType.Integer;
 		subtype = DType.Integer4;
 		data = (Integer) bytedata.getInt();// &0xFFFFFFFF;
 	}
 
-	private void decode_integer8(HeapBuffer bytedata) {
+	private void decode_integer8(ByteBuffer bytedata) {
 
 		type = DType.Integer;
 		subtype = DType.Integer8;
@@ -284,7 +283,7 @@ public class CAnyValue {
 		return 0;
 	}
 
-	private void decode_string1(HeapBuffer bytedata) {
+	private void decode_string1(ByteBuffer bytedata) {
 		type = DType.String;
 		subtype = DType.String1;
 		int length = bytedata.get() & 0xFF;
@@ -294,7 +293,7 @@ public class CAnyValue {
 
 	}
 
-	private void decode_string2(HeapBuffer bytedata) {
+	private void decode_string2(ByteBuffer bytedata) {
 		type = DType.String;
 		subtype = DType.String2;
 		int length = (int) bytedata.getShort() & 0xFFFF;
@@ -304,7 +303,7 @@ public class CAnyValue {
 
 	}
 
-	private void decode_string4(HeapBuffer bytedata) {
+	private void decode_string4(ByteBuffer bytedata) {
 		type = DType.String;
 		subtype = DType.String4;
 		int length = bytedata.getInt();
@@ -313,7 +312,7 @@ public class CAnyValue {
 		data = new String(strdata);
 	}
 
-	private void decode_vector(HeapBuffer bytedata) {
+	private void decode_vector(ByteBuffer bytedata) {
 		initAsArray();
 		type = DType.Vector;
 		subtype = DType.Vector;
@@ -326,7 +325,7 @@ public class CAnyValue {
 
 	}
 
-	private void decode_map(HeapBuffer bytedata) {
+	private void decode_map(ByteBuffer bytedata) {
 		initAsMap();
 		type = DType.Map;
 		subtype = DType.Map;
@@ -340,18 +339,100 @@ public class CAnyValue {
 			((Map<String, CAnyValue>) data).put(new String(strdata), value);
 		}
 	}
+	
+	
+	private int getEncodeSize()
+	{
+		if(type == DType.Integer)
+		{
+			long num = getUnsignedNum(data);
+			if (num <= 0xFF) {
+				return 2;
+			} else if (num <= 0xFFFF) {
+				return 3;
+			} else if (num <= 0xFFFFFFFF) {
+				return 5;
+			} else {
+				return 9;
+			}
+		}
+		else if(type == DType.SInteger)
+		{
+			long num = getUnsignedNum(data);
+			if (num > -129) {
+				return 2;
+			} else if (num > -32769) {
+				return 3;
+			} else if (num > -2147483649L) {
+				return 5;
+			} else {
+				return 9;
+			}
+		}
+		else if(type == DType.Bool)
+		{
+			return 2;
+		}
+		else if(type == DType.Null || type == -1)
+		{
+			return 1;
+		}
+		else if(type == DType.Float)
+		{
+			return 9;
+		}
+		else if(type == DType.String)
+		{
+			String str = (String) data;
+			byte[] bytes = str.getBytes();
+			if (bytes.length <= 0xFF) {
+				return bytes.length+2;
+			} else if (bytes.length <= 0xFFFF) {
+				return bytes.length+3;
+			} else {
+				return bytes.length+5;
+			}
+		}
+		else if(type == DType.Vector)
+		{
+			int size = 5;
+			Iterator iterator = ((List<CAnyValue>) data).iterator();
+			while (iterator.hasNext()) {
+				size+= ((CAnyValue) iterator.next()).getEncodeSize();
+			}
+			return size;
+		}
+		else if(type == DType.Map)
+		{
+			int size = 5;
+			
+			Iterator iterator = ((Map<String, CAnyValue>) data).entrySet().iterator();
+			while (iterator.hasNext()) {
+				Map.Entry<String, CAnyValue> entry = (Map.Entry<String, CAnyValue>) iterator.next();
+				String key = entry.getKey();
+				CAnyValue value = (CAnyValue) entry.getValue();
+				size++;
+				size+=key.getBytes().length;
+				size+=value.getEncodeSize();
+			}
+			return size;			
+		}
+		else
+		{
+			throw new Error("not support type:"+type);
+		}
+	}
 
 	public byte [] encode()
 	{
-		HeapBuffer buffer = HeapBuffer.allocate();
+		byte[] data = new byte[getEncodeSize()];
+		ByteBuffer buffer = ByteBuffer.wrap(data);
 		encode(buffer);
-		byte [] data = new byte[buffer.position()];
-		System.arraycopy(buffer.array(), 0, data, 0, buffer.position());
 		return data;
 	}
 	
 	
-	private void encode(HeapBuffer buffer) {
+	private void encode(ByteBuffer buffer) {
 		if (type < -1) {
 			return;
 		}
@@ -386,11 +467,11 @@ public class CAnyValue {
 		}
 	}
 
-	private void encode_null(HeapBuffer buffer) {
+	private void encode_null(ByteBuffer buffer) {
 		buffer.put((byte) DType.Null);
 	}
 
-	private void encode_bool(HeapBuffer buffer) {
+	private void encode_bool(ByteBuffer buffer) {
 		buffer.put((byte) DType.Bool);
 		if ((Boolean) data == true) {
 			buffer.put((byte) 1);
@@ -399,13 +480,13 @@ public class CAnyValue {
 		}
 	}
 
-	private void encode_float(HeapBuffer buffer) {
+	private void encode_float(ByteBuffer buffer) {
 		buffer.put((byte) DType.Float);
 		double flValue = (Double) data;
 		buffer.putDouble(flValue);
 	}
 
-	private void encode_integer(HeapBuffer buffer) {
+	private void encode_integer(ByteBuffer buffer) {
 		long num = getUnsignedNum(data);
 		if (num <= 0xFF) {
 			buffer.put((byte) DType.Integer1);
@@ -422,7 +503,7 @@ public class CAnyValue {
 		}
 	}
 
-	private void encode_sinteger(HeapBuffer buffer) {
+	private void encode_sinteger(ByteBuffer buffer) {
 		long num = getUnsignedNum(data);
 		if (num > -129) {
 			buffer.put((byte) DType.SInteger1);
@@ -439,7 +520,7 @@ public class CAnyValue {
 		}
 	}
 
-	private void encode_string(HeapBuffer buffer) {
+	private void encode_string(ByteBuffer buffer) {
 		String str = (String) data;
 		byte[] bytes = str.getBytes();
 		if (bytes.length <= 0xFF) {
@@ -457,7 +538,7 @@ public class CAnyValue {
 		}
 	}
 
-	private void encode_vector(HeapBuffer buffer) {
+	private void encode_vector(ByteBuffer buffer) {
 		buffer.put((byte) DType.Vector);
 		int size = ((List<CAnyValue>) data).size();
 		buffer.putInt(size);
@@ -472,6 +553,12 @@ public class CAnyValue {
 		StringBuffer sBuf = new StringBuffer();
 		encodeJSON(sBuf);
 		return sBuf.toString();
+	}
+	
+	@Override
+	public String toString()
+	{
+		return encodeJSON();
 	}
 	
 	private void encodeJSON(StringBuffer sBuf) {
@@ -1019,7 +1106,7 @@ public class CAnyValue {
 			}
 		}
 	}
-	private void encode_map(HeapBuffer buffer) {
+	private void encode_map(ByteBuffer buffer) {
 		buffer.put((byte) DType.Map);
 		int size = ((Map<String, CAnyValue>) data).size();
 		buffer.putInt(size);
@@ -1028,7 +1115,7 @@ public class CAnyValue {
 			Map.Entry<String, CAnyValue> entry = (Map.Entry<String, CAnyValue>) iterator.next();
 			String key = entry.getKey();
 			CAnyValue value = (CAnyValue) entry.getValue();
-			buffer.put((byte) key.length());
+			buffer.put((byte) key.getBytes().length);
 			buffer.put(key.getBytes());
 			value.encode(buffer);
 		}
@@ -1316,345 +1403,3 @@ public class CAnyValue {
 
 	}
 }
-
-
-//自增长buffer 实现
-class HeapBuffer {
-
-	private byte []data = null;
-	private ByteBuffer buffer = null;
-	private int initSize = 0;
-	private int maxSize = 0;
-	private int currCapacity = 0;
-	private static int DEFAULT_INIT_SIZE = 4096;
-	private static int DEFAULT_MAX_SIZE = 1024*1024*100;
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		HeapBuffer buffer = HeapBuffer.allocate();
-		buffer.putInt(1);
-		buffer.putInt(1);
-		buffer.putInt(1);
-		buffer.putInt(1);
-		buffer.putInt(1);
-		buffer.putInt(1);
-		byte []data = new byte[1000000];
-		buffer.put(data);
-		System.out.println(buffer.currCapacity());
-	}
-	
-	public static HeapBuffer allocate()
-	{
-		return new HeapBuffer(DEFAULT_INIT_SIZE, DEFAULT_MAX_SIZE);
-	}
-	
-	public static HeapBuffer wrap(byte[] src)
-	{
-		return new HeapBuffer(src);
-	}
-	
-	public static HeapBuffer wrap(byte[] src,int offset,int length)
-	{
-		return new HeapBuffer(src,offset,length);
-	}
-	
-	protected HeapBuffer(byte[] src)
-	{
-		data = src;
-		currCapacity = src.length;
-		this.initSize = currCapacity;
-		this.maxSize = currCapacity;
-		buffer = ByteBuffer.wrap(data);
-	}
-	
-	protected HeapBuffer(byte[] src,int offset,int length)
-	{
-		data = src;
-		currCapacity = src.length;
-		this.initSize = currCapacity;
-		this.maxSize = currCapacity;
-		buffer = ByteBuffer.wrap(data,offset,length);
-	}
-	
-	protected HeapBuffer(int initSize,int maxSize)
-	{
-		data = new byte[initSize];
-		currCapacity = initSize;
-		this.initSize = initSize;
-		this.maxSize = maxSize;
-		buffer = ByteBuffer.wrap(data);
-	}
-	
-	public byte get()
-	{
-		return buffer.get();
-	}
-	
-	public byte get(int index)
-	{
-		return buffer.get(index);
-	}
-	
-	public HeapBuffer get(byte[] dst)
-	{
-		buffer.get(dst);
-		return this;
-	}
-	
-	public HeapBuffer get(byte[] dst,int offset,int length)
-	{
-		buffer.get(dst,offset,length);
-		return this;
-	}
-	
-	public char getChar()
-	{
-		return buffer.getChar();
-	}
-
-	public char getChar(int index)
-	{
-		return buffer.getChar(index);
-	}
-
-	public double getDouble()
-	{
-		return buffer.getDouble();
-	}
-	public double getDouble(int index)
-	{
-		return buffer.getDouble(index);
-	}
-	public float getFloat()
-	{
-		return buffer.getFloat();
-	}
-	public float getFloat(int index)
-	{
-		return buffer.getFloat(index);
-	}
-	
-	public int getInt()
-	{
-		return buffer.getInt();
-	}
-	public int getInt(int index)
-	{
-		return buffer.getInt(index);
-	}
-	public long getLong()
-	{
-		return buffer.getLong();
-	}
-	public long getLong(int index)
-	{
-		return buffer.getLong(index);
-	}
-	
-	public short getShort()
-	{
-		return buffer.getShort();
-	}
-	public short getShort(int index)
-	{
-		return buffer.getShort(index);
-	}
-	
-	private void expand(int need)
-	{
-		currCapacity = (currCapacity+need)*2;
-		if(currCapacity > maxSize) 
-		{
-			currCapacity = maxSize;
-		}
-		byte [] preData = data;
-		data = new byte[currCapacity];
-		
-		System.arraycopy(preData, 0, data, 0, preData.length);
-		
-		int position = buffer.position();
-		buffer = ByteBuffer.wrap(data);
-		buffer.position(position);
-	}
-	
-	public boolean check(int offset)
-	{
-		if(buffer.position()+offset > currCapacity)
-		{
-			return false;
-		}
-		return true;
-	}
-	
-	public HeapBuffer put(byte b)
-	{
-		if(!check(1)) 
-		{
-			expand(1);
-		}	
-		buffer.put(b);
-		return this;
-	}
-	
-	public HeapBuffer put(byte[] src)
-	{
-		if(!check(src.length)) 
-		{
-			expand(src.length);
-		}
-		buffer.put(src);
-		return this;
-	}
-	
-	public HeapBuffer put(int index,byte b)
-	{
-		buffer.put(index, b);
-		return this;
-	}
-	
-	public HeapBuffer put(byte[] src,int offset,int length)
-	{
-		if(!check(length)) 
-		{
-			expand(length);
-		}
-		buffer.put(src, offset, length);
-		return this;
-	}
-	
-	public HeapBuffer putChar(char value)
-	{
-		if(!check(2)) 
-		{
-			expand(2);
-		}
-		buffer.putChar(value);
-		return this;
-	}
-	
-	public HeapBuffer putChar(int index ,char value)
-	{
-		buffer.putChar(index,value);
-		return this;
-	}
-	
-	public HeapBuffer putShort(short value)
-	{
-		if(!check(2)) 
-		{
-			expand(2);
-		}
-		buffer.putShort(value);
-		return this;
-	}
-	
-	public HeapBuffer putShort(int index ,short value)
-	{
-		buffer.putShort(index,value);
-		return this;
-	}
-	
-	public HeapBuffer putInt(int value)
-	{
-		if(!check(4)) 
-		{
-			expand(4);
-		}
-		buffer.putInt(value);
-		return this;
-	}
-	
-	public HeapBuffer putShort(int index ,int value)
-	{
-		buffer.putInt(index,value);
-		return this;
-	}
-	
-	public HeapBuffer putLong(long value)
-	{
-		if(!check(8)) 
-		{
-			expand(8);
-		}
-		buffer.putLong(value);
-		return this;
-	}
-	
-	public HeapBuffer putLong(int index ,long value)
-	{
-		buffer.putLong(index,value);
-		return this;
-	}
-	
-	public HeapBuffer putFloat(float value)
-	{
-		if(!check(4)) 
-		{
-			expand(4);
-		}
-		buffer.putFloat(value);
-		return this;
-	}
-	
-	public HeapBuffer putFloat(int index ,float value)
-	{
-		buffer.putFloat(index,value);
-		return this;
-	}
-	
-	public HeapBuffer putDouble(double value)
-	{
-		if(!check(8)) 
-		{
-			expand(8);
-		}
-		buffer.putDouble(value);
-		return this;
-	}
-	
-	public HeapBuffer putDouble(int index ,double value)
-	{
-		buffer.putDouble(index,value);
-		return this;
-	}
-	
-	public int capacity()
-	{
-		return maxSize;
-	}
-	
-	public int position()
-	{
-		return buffer.position();
-	}
-	
-	public HeapBuffer position(int pos)
-	{
-		buffer.position(pos);
-		return this;
-	}
-	
-	public HeapBuffer mark()
-	{
-		buffer.mark();
-		return this;
-	}
-	
-	public HeapBuffer reset()
-	{
-		buffer.reset();
-		return this;
-	}
-	
-	public int currCapacity()
-	{
-		return currCapacity;
-	}
-	
-	public byte[] array()
-	{
-		return buffer.array();
-	}
-}
-
-
-

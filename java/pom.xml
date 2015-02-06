@@ -22,20 +22,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-
-
-	<distributionManagement>
-		<repository>
-			<id>mozat</id>
-			<name>Internal Releases</name>
-			<url>http://maven.dev.lan/content/repositories/releases/</url>
-		</repository>
-
-		<snapshotRepository>
-			<id>mozat</id>
-			<name>Internal Releases</name>
-			<url>http://maven.dev.lan/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 </project>

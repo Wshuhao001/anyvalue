@@ -24,6 +24,7 @@ public class Anyvalue {
 		// TODO code application logic here
 		
 		CAnyValue oValue = new CAnyValue();
+		
 		oValue.put("ABC");
 		oValue.put(-100000000);
 		oValue.put(-1);
@@ -31,6 +32,7 @@ public class Anyvalue {
 		oValue.put(false);
 		oValue.put(1.55555555);
 		oValue.put(null);
+		
 		oValue.put(new CAnyValue());
 		CAnyValue oValue1 = new CAnyValue();
 		oValue1.put("name", "starjiang");
@@ -38,14 +40,15 @@ public class Anyvalue {
 		bytes[0]=15;
 		String s = new String(bytes);
 		oValue1.put("desc1",s);
+		
 		oValue1.put("desc", "我爱北京天安门\n");
 		oValue1.put("age", 30);
 		oValue1.put("age2", 0);
 		oValue.put(oValue1);
 		oValue.put("starjiang\n");
 		oValue.put("111111111111111111111111111111111111111111111111111111111111111111111111111111");
-		
-		byte [] data = oValue.encode();
+	
+		byte data[] = oValue.encode();;
 		String sBuf = oValue.encodeJSON();
 		System.out.println(sBuf);
 		
@@ -54,8 +57,6 @@ public class Anyvalue {
 		String sBuf3 = oValue2.encodeJSON();
 
 		System.out.println("sbuf3="+sBuf3);
-		String sBuf5 =oValue1.encodeJSON();
-		System.out.println(sBuf5);
 		CAnyValue oValue3 = new CAnyValue();
 		oValue3.decodeJSON(sBuf3);
 		
